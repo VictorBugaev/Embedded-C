@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <string.h>
+#include <malloc.h>
 
 #define N 100
+#define MAX_VALUE 10
 
 struct abonent {
-    char name[10];
-    char second_name[10];
-    char tel[10];
+    char name[MAX_VALUE];
+    char second_name[MAX_VALUE];
+    char tel[MAX_VALUE];
 };
 
 void print_menu();
@@ -19,18 +21,19 @@ void error_handler();
 
 int main(){
     int flag = 1;
-    char num;
+    char num[2];
     int count = 0;
     int count_ab = 0;
     struct abonent mass[N];
     print_menu();
+
     while (flag)
     {
-        scanf("%c", &num);
-        if(num == '\n'){
+        fgets(num, 2, stdin);
+        if(num[0] == '\n'){
             continue;
         }
-        switch (num)
+        switch (num[0])
         {
         case '1':
             count = add(count, mass);
@@ -64,18 +67,18 @@ void print_menu(){
 
 int add(int count, struct abonent *mass){
     if (count < N){
+        char rubbish = fgetc(stdin);
         printf("----------------\n");
-        printf("Введите имя\n");
-        scanf("%s", mass[count].name);
+        printf("Введите имя\n");   
+        fgets(mass[count].name, MAX_VALUE, stdin);
         printf("----------------\n");
         printf("Введите фамилию\n");
-        scanf("%s", mass[count].second_name);
+        fgets(mass[count].second_name, MAX_VALUE, stdin);
         printf("----------------\n");
         printf("Введите телефон\n");
-        scanf("%s", mass[count].tel);
+        fgets(mass[count].tel, MAX_VALUE, stdin);
         printf("----------------\n\n");
         count ++;
-            //count_ab ++;
     }else{
         printf("----------------\n");
         printf("Список переполнен\n");
@@ -86,21 +89,24 @@ int add(int count, struct abonent *mass){
 void delete(struct abonent *mass){
     int a;
     printf("----------------\n");
+    printf("Введите номер абонента\n");
     scanf("%d", &a);
-    printf("Номер абонента\n");
+    if (a > 100){
+        perror("Invalid value");
+    }
     printf("----------------\n");
 
     strcpy(mass[a-1].name, "0");
     strcpy(mass[a-1].second_name, "0");
     strcpy(mass[a-1].tel, "0");
-            //count_ab --;
 }
 void search(int count, struct abonent *mass){
-    char str[256];
+    char rubbish = fgetc(stdin);
+    char str[MAX_VALUE];
     int f = 0;
     printf("----------------\n");
     printf("Введите имя\n");
-    scanf("%s", str);
+    fgets(str, sizeof(str), stdin);
     for(int i = 0; i < count; i++){
         if (strcmp(str, mass[i].name) == 0) {
             f = 1;
