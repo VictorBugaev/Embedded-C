@@ -23,3 +23,6 @@ summary: summary.c
 
 clean:
 	rm *.o 
+
+clean_lib:
+	rm $(LIB_DIR)/*.so 
