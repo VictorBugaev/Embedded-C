@@ -12,14 +12,56 @@
 #include <sys/stat.h>
 #include <time.h>
 
-int main(int argc, char ** argv) {
-    DIR * dir = opendir("./");
+
+void print_dir(WINDOW *name, WINDOW *size, WINDOW *time, char *dir_name){
+    DIR * dir = opendir(dir_name);
+    int cur_pos = 2;
+    int string = 1;
     if(!dir){
         perror("diropen");
         exit(0);
     }
+
+        wbkgd(name, COLOR_PAIR(2)); 
+        wbkgd(size, COLOR_PAIR(2)); 
+        wbkgd(time, COLOR_PAIR(2));
+
+
+    init_pair(3, COLOR_BLACK, COLOR_RED);  
     struct dirent * str;
     struct stat file;
+
+    wprintw(name, "  /.. \n");
+    wprintw(size, "  UP-DIR\n");
+    wprintw(time, "  ---\n");
+
+
+
+    while((str = readdir(dir)) != NULL){
+        if(cur_pos == string){
+            wbkgd(name, COLOR_PAIR(3)); 
+            wbkgd(size, COLOR_PAIR(3)); 
+            wbkgd(time, COLOR_PAIR(3)); 
+        }
+        wprintw(name, " str-%d pos-%d", string, cur_pos);
+        wprintw(name, "  %s \n", str -> d_name);
+        wprintw(size, "  %d \n", str -> d_reclen);
+        
+        if(stat(dir_name, &file) < 0){
+            perror("stat");
+            exit(0);
+        }
+        wprintw(time, "  %s", ctime(&file.st_mtime));
+        string++;
+    }
+}
+
+
+int main(int argc, char ** argv) {
+   // struct dirent * str;
+   // struct stat file;
+    int key; 
+    int count = 6;
     
     WINDOW * wnd1; 
     WINDOW * sub1; 
@@ -37,10 +79,12 @@ int main(int argc, char ** argv) {
         
     initscr();
     cbreak();
-    curs_set(1);
+    curs_set(0);
     start_color();
     init_pair(1, COLOR_WHITE, COLOR_BLUE);  
     init_pair(2, COLOR_YELLOW,COLOR_BLUE);
+    noecho();
+    keypad(stdscr, TRUE);
 
     refresh();
     int rows, cols;
@@ -54,50 +98,50 @@ int main(int argc, char ** argv) {
     
     sub1 = derwin(wnd1, rows, (cols/2), 0, 0);
     
-    
-    wattron(sub1, COLOR_PAIR(2)| A_BOLD); // Включаем цветовую пару с желтым цветом
-    wattron(sub1, COLOR_PAIR(2)); // Включаем цветовую пару с желтым цветом
-
+    wattron(sub1, COLOR_PAIR(2)| A_BOLD);
+    //wattron(sub1, COLOR_PAIR(2)); 
 
     name1 = derwin(sub1, rows, cols/6, 0, 0);
     size1 = derwin(sub1, rows, cols/11, 0, cols/6);
     time1 = derwin(sub1, rows, cols/4, 0, cols/4);
     
-    wprintw(name1, "\n  Name\n\n");
-    wprintw(size1, "\n  Size\n\n");
-    wprintw(time1, "\n  Time\n\n");
+    wprintw(name1, "\n  Name\n");
+    wprintw(size1, "\n  Size\n");
+    wprintw(time1, "\n  Time\n");
     
-    wattroff(name1, COLOR_PAIR(2)| A_BOLD); // Выключаем цветовую пару с желтым цветом
-    wattroff(size1, COLOR_PAIR(2)| A_BOLD); // Выключаем цветовую пару с желтым цветом
-    wattroff(time1, COLOR_PAIR(2)| A_BOLD); // Выключаем цветовую пару с желтым цветом
-    
-    while((str = readdir(dir)) != NULL){
-        wprintw(name1, "  %s \n", str -> d_name);
-        wprintw(size1, "  %d \n", str -> d_reclen);
-        
-        if(stat(str -> d_name, &file) < 0){
-            perror("stat");
-            exit(0);
-        }
-        wprintw(time1, "  %s", ctime(&file.st_mtime));
-        
-    }
+    //wattroff(name1, COLOR_PAIR(1)| A_BOLD); 
+    //wattroff(size1, COLOR_PAIR(1)| A_BOLD); 
+    //wattroff(time1, COLOR_PAIR(1)| A_BOLD);
 
-    
+    print_dir(name1, size1, time1, "./");
+
+
     box(name1, '|', '-');
     box(size1, '|', '-');
     box(time1, '|', '-');
     box(wnd1, '|', '-');
-
-    
-    
-    if(wgetch(wnd1) == 'q'){
-        printw("asdasdasd");
-    }
-    
-    
-    
-    //wprintw(sub1, "Hello, brave new curses world!\n"); 
+    int f = 1;
+    int cur_pos = 0;
+    /*while (f){
+        key = getch();
+        switch (key)
+        {
+        case KEY_UP:
+            f = 0;
+            if(cur_pos>0)
+            cur_pos --;
+            move(0, cur_pos);
+            break;
+        case KEY_DOWN:
+            f = 0;
+            cur_pos ++;
+            move(0, cur_pos);
+            break;
+        default:
+            break;
+        }
+    }*/
+    //print_dir(name1, size1, time1, "./");
     
         
     wnd2= derwin(main, rows-1, cols/2, 0, cols/2);
@@ -112,13 +156,33 @@ int main(int argc, char ** argv) {
     wrefresh(sub1);
     wrefresh(wnd1);
     wrefresh(main);
-        
+    move(rows, cols);
+        while ((key = getch()) != 'q') {
+        switch (key) {
+            case KEY_UP:
+                wclear(name1);
+                print_dir(name1, size1, time1, "./");
+                //wprintw(name1, "\n  Name\n");
+                wrefresh(name1);
+                break;
+            case KEY_DOWN:
+                wclear(name1);
+                //refresh();
+                print_dir(name1, size1, time1, "./../");
+                wrefresh(name1);
+
+                break;
+            default:
+                break;
+        }
+        refresh();
+    }
     delwin(sub1);
     delwin(wnd1);
     delwin(main);
     
     refresh();
-    //getch();
+    getch();
     endwin();
     exit(EXIT_SUCCESS);
 }

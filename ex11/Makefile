@@ -1,4 +1,4 @@
 all: mk
 
-mk: main.c
-	gcc main.c -o one -lncurses
+mk: backup.c
+	gcc backup.c -o one -lncurses
