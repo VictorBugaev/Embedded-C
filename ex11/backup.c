@@ -10,6 +10,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+//#include <malloc.h>
+
+#define DOUBLE_CLICK 2
 
 void transition(){
 
@@ -27,10 +30,7 @@ int print_wind(WINDOW *main, WINDOW *wnd[], int wind_num, int current_position, 
     getmaxyx(stdscr, rows, cols);
     DIR * dir = opendir(dir_name);
     if(!dir){
-        //perror("diropen");
-        //exit(0);
         return 0;
-        //dir = 1;
     }
     struct dirent * str;
     struct stat file;
@@ -76,24 +76,28 @@ int print_wind(WINDOW *main, WINDOW *wnd[], int wind_num, int current_position, 
         wprintw(name[i], " %s \n", str -> d_name);
         wprintw(size[i], " %d \n", str -> d_reclen);
         if(stat(dir_name, &file) < 0){
-            //perror("stat");
-            //exit(0);
-            //return 0;
             break;
         }
         wprintw(time[i], "   %s", ctime(&file.st_mtime));
         *count = i;
+        wrefresh(name[i]);
+        wrefresh(size[i]);
+        wrefresh(time[i]);
     }
     box(wind_box, '|', '-');
+    wrefresh(wind_box);
     wrefresh(main);
     refresh();
 }
 
 int main(){
-    int key, rows, cols;
+    int rows, cols;
+    int key;
     int current_position = 2;
     int wind_num = 0;
     int content = 0;
+    
+    time_t lastClickTime = 0;
     
     char current_name[10000]="./";
     
@@ -119,21 +123,28 @@ int main(){
         box(wnd[i], '|', '-');
         wrefresh(wnd[i]);
     }
+    mousemask(BUTTON1_CLICKED, NULL);
+    mousemask(BUTTON1_CLICKED, NULL);
     int k = 1;
     int f = 0;
 
-    char dir_name[100000] = "./"; 
-    //print_wind(main, wnd, wind_num, current_position, dir_name, &content, current_name, f);
-    //wrefresh(main);
-    //print_wind(main, wnd, k, current_position, dir_name, &content, current_name, f);
-    //wrefresh(main);
+    
+    char dir_name[1000000] = "./"; 
+    char wind1_dir_name[1000000] = "./"; 
+    char wind2_dir_name[1000000] = "./"; 
+
+    print_wind(main, wnd, wind_num, current_position, dir_name, &content, current_name, f);
+    print_wind(main, wnd, k, current_position, dir_name, &content, current_name, f);
+    
+    wrefresh(main);
+    refresh();
     while ((key = getch()) != 'q') {
         switch (key) {
-        case 259:
+        case KEY_UP:
             if(current_position > 2) current_position --;
             print_wind(main, wnd, wind_num, current_position, dir_name, &content, current_name, f);
             break;
-        case 258:
+        case KEY_DOWN:
             if(current_position < content) current_position ++;
             print_wind(main, wnd, wind_num, current_position, dir_name, &content, current_name, f);
             break;
@@ -146,8 +157,43 @@ int main(){
         case 9:
             wind_num = k % 2;
             current_position = 2;
+            if(k == 1){
+
+             //
+                strcpy(wind1_dir_name, dir_name);
+                memset(dir_name, 0, strlen(dir_name));
+                strcpy(dir_name, wind2_dir_name);
+            }else{
+                strcpy(wind2_dir_name, dir_name);
+                memset(dir_name, 0, strlen(dir_name));
+                strcpy(dir_name, wind1_dir_name);     
+            }
             print_wind(main, wnd, wind_num, current_position, dir_name, &content, current_name, f);
-            k++; 
+                wprintw(wnd[wind_num], "%s\n", dir_name);
+
+            k++;
+            break;
+        case KEY_MOUSE:
+            MEVENT event;
+            if (getmouse(&event) == OK) {
+                time_t currentTime = time(NULL);
+                if (lastClickTime != 0 && difftime(currentTime, lastClickTime) < 3) {
+                    f = 1;
+                    print_wind(main, wnd, wind_num, current_position, current_name, &content, current_name, f);
+                    strcpy(dir_name, current_name);
+                    f = 0;
+                } else{
+                    print_wind(main, wnd, wind_num, event.y, current_name, &content, current_name, f);
+                }
+                lastClickTime = currentTime;
+            }
+            break;
+        /*case BUTTON1_DOUBLE_CLICKED:
+            f = 1;
+            print_wind(main, wnd, wind_num, current_position, current_name, &content, current_name, f);
+            strcpy(dir_name, current_name);
+            f = 0;
+            break;//закоментить*/
         default:
             break;
         }
@@ -155,7 +201,6 @@ int main(){
     }
 
     refresh();
-
-    //getch();
     endwin();
 }
+
