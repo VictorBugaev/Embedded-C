@@ -1,4 +1,4 @@
 all: mk
 
-mk: main.c
-	gcc main.c -o main
+mk: backup.c
+	gcc backup.c -o main

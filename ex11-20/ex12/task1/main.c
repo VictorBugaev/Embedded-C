@@ -10,7 +10,7 @@ int main(){
     if(child_pid == 0){
         printf("child pid - %d\n", getpid());
         printf("child ppid - %d\n", getppid());
-        exit(2);
+        exit(1);
     }else{
         printf("parent pid - %d\n", getpid());
         printf("parent ppid - %d\n", getppid());        
