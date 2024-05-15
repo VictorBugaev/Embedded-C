@@ -1,8 +1,9 @@
 #include "main.h"
 
 int choice_flag = 1;
-char * proc1[256];
-
+int flag_to_start_second_proc = 0;
+char proc1[100000];
+char proc2[100000];
 void set_color(WINDOW *name, WINDOW *size, WINDOW *time, int num) {
   wbkgd(name, COLOR_PAIR(num));
   wbkgd(time, COLOR_PAIR(num));
@@ -50,46 +51,45 @@ int print_wind(WINDOW *main, WINDOW *wnd[], int wind_num, int current_position,
       }
       if (i == current_position && f) {
         strcat(current_name, str->d_name);
-        if (!dir_check(current_name)) {  
+        if (!dir_check(current_name)) {
           int choice;
-          if(choice_flag){
+          if (choice_flag) {
             printw("Do you want to use '|' (1) - yes (2) - no?");
             refresh();
-            
             choice = fgetc(stdin);
           }
-          if(choice = 1){
-            int proc_count = 0;
-            strncpy(proc1, current_name, strlen(current_name));
-            proc_count += 1;
-          }
-          if(!choice_flag){
-            double_proc_create(proc1, current_name);
-            memset(proc1, 0, sizeof(proc1));
+
+          if (flag_to_start_second_proc) {
             choice_flag = 1;
-          }
-          choice_flag = 0;
-          /*int fd[2];
-          pipe(fd);
-          pid = fork();
-          if (pid == 0) {
-            if (a == 0){
-              a = 1;             
-              dup2(fd[1], STDOUT_FILENO);
-              execv(current_name, NULL);
+            strncpy(proc2, current_name, strlen(current_name));
+            pid = fork();
+            if (pid == 0) {
+              execv(double_proc_create(proc1, proc2), NULL);
+              exit(1);
             } else {
-              dup2(fd[0], 0);
-              execv(current_name, NULL);
-
-              a = 0;  
+              wait(&status);
             }
-            execv(current_name, NULL);
-            exit(1);
-          } else {
-            wait(&status);
 
-          }*/
-          strcpy(current_name, dir_name);
+            strncpy(current_name, dir_name, strlen(dir_name));
+          }
+          if (choice == 49) {
+            choice_flag = 0;
+            printw("Choice second file(after 1 sec)");
+            refresh();
+            sleep(1);
+            strncpy(proc1, current_name, strlen(current_name));
+            flag_to_start_second_proc = 1;
+          } else if (choice == 50) {
+            pid = fork();
+            if (pid == 0) {
+              execv(current_name, NULL);
+              exit(1);
+            } else {
+              wait(&status);
+            }
+            strncpy(current_name, dir_name, strlen(dir_name));
+          }
+
         } else {
           strcat(current_name, "/");
         }
@@ -106,7 +106,7 @@ int print_wind(WINDOW *main, WINDOW *wnd[], int wind_num, int current_position,
       wclear(size[i]);
       wclear(time[i]);
     }
-    
+
     wrefresh(string[i]);
   }
   box(wind_box, '|', '-');
@@ -128,40 +128,26 @@ int dir_check(char *name) {
   return res;
 }
 
-int double_proc_create(char * proc1, char * proc2){
-    int fd[2];
-    pipe(fd);
+void *double_proc_create(char *proc1, char *proc2) {
+  int fd[2];
+  pipe(fd);
 
-    pid_t pid = fork();
+  pid_t pid = fork();
 
-    if (pid < 0) {
-        printf("Ошибка при создании процесса\n");
-        return 1;
-    } else if (pid == 0) {
-        // Дочерний процесс
+  if (pid < 0) {
+    printf("Ошибка при создании процесса\n");
+    return NULL;
+  } else if (pid == 0) {
+    close(fd[1]);
+    dup2(fd[0], 0);
+    close(fd[0]);
+    execv(proc2, NULL);
+  } else {
+    close(fd[0]);
+    dup2(fd[1], 1);
+    close(fd[1]);
+    execv(proc1, NULL);
+  }
 
-        // Закрываем дескриптор для записи
-        close(fd[1]);
-        
-        // Перенаправляем стандартный ввод на дескриптор для чтения из канала
-        dup2(fd[0], 0);
-        close(fd[0]);
-
-        // Выполняем команду 'grep a'
-        execv(proc2, NULL);
-    } else {
-        // Родительский процесс
-
-        // Закрываем дескриптор для чтения
-        close(fd[0]);
-        
-        // Перенаправляем стандартный вывод на дескриптор для записи в канал
-        dup2(fd[1], 1);
-        close(fd[1]);
-
-        // Выполняем команду 'ls -la'
-        execv(proc1, NULL);
-    }
-
-    return 0;
+  return NULL;
 }
