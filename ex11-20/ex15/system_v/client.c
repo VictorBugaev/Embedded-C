@@ -32,7 +32,7 @@ int main() {
   printf("Message from the server: %s", msg.mtext);
   msg.mtype = 2;
 
-  char *message = "Message from the client";
+  char *message = "Hi!";
   memset(msg.mtext, 0, sizeof(msg.mtext));
   strncpy(msg.mtext, message, strlen(message));
   if (msgsnd(id, &msg, strlen(msg.mtext), 0) == -1) {
