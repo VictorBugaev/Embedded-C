@@ -32,8 +32,12 @@ int main() {
   while(f){
     char client_message[256];
     char server_message[256];
-    if (mq_receive(server_fd, server_message, sizeof(server_message), NULL) != -1 | errno == EAGAIN) {
+    if (mq_receive(server_fd, server_message, sizeof(server_message), NULL) == -1){
       if(errno != EAGAIN){
+        perror("server mq_receive");
+        return -1;
+      }
+    }else{
         printf("%s\n", server_message);
         memset(server_message, 0, strlen(server_message));
         char *message = "You connected to the server! Write your message\n";
@@ -41,16 +45,15 @@ int main() {
         if (mq_send(server_fd, server_message, strlen(server_message), 1) == -1) {
           perror("mq_send");
         }
+                memset(server_message, 0, strlen(server_message));
+
         attr.mq_flags = O_NONBLOCK;
         if (mq_setattr(server_fd, &attr, NULL)){
           perror("mq_setattr");
           return -1;
         }
       }
-    } else{
-      perror("server mq_receive");
-      return -1;
-    }
+    
     if (mq_receive(client_fd, client_message, sizeof(client_message), 0) == -1 && errno != EAGAIN) {
       //printf("%s", wr)
       perror("client mq_receive");
@@ -58,7 +61,7 @@ int main() {
     sleep(2);
     if(strcmp(client_message,"exit") == 0){
       printf("Client leave the chat\n");   
-    }else{
+    }else if(strlen(client_message)){
       printf("%s\n", client_message);
     }
     memset(client_message, 0, strlen(client_message));

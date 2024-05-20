@@ -26,7 +26,7 @@ int main() {
     perror("cl - mq_open");
   }
   char connection_message[256];
-  sprintf(connection_message, "Client %d connected to server", pid);
+  sprintf(connection_message, "Client %d connected to server\n", pid);
   if (mq_send(server_fd, connection_message, strlen(connection_message), 1) == -1) {
     perror("mq_send");
 
