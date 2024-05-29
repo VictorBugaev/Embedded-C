@@ -46,7 +46,10 @@ int main() {
   strncpy(ptr, snd_message, strlen(snd_message));
   semop(sem_fd, &sem_op, 1);
   printf("%s\n", ptr);
-
+  if(semctl(sem_fd, 0, IPC_RMID) == -1){
+    perror("semctl");
+    return -1;
+  }
   if (shmdt(ptr) == -1) {
     perror("shmdt");
     return -1;
