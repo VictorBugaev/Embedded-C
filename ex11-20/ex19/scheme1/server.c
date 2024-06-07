@@ -8,10 +8,10 @@
 #include <unistd.h>
 
 #define PORT 2000
-#define SERVER "Server"
+#define SERVER "192.168.0.1"
 
 int main() {
-  char message[256] = "Hello from client\n";
+  char message[256];
   int message_count = 10;
   int new_fd;
 
@@ -37,6 +37,8 @@ int main() {
   }
 
   memset(message, 0, sizeof(message));
+
+  strncpy(message, "Hello from server\n", 20);
 
   if (recv(fd, message, sizeof(message), 0) == -1) {
     perror("recv");
