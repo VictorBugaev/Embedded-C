@@ -1,6 +1,6 @@
 all: main
 
-main: server.c client.c functions.c
+main: server.c client.c functions.c 
 	gcc server.c functions.c -o server
 	gcc client.c functions.c -o client
 

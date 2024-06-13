@@ -7,4 +7,5 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-int main() { tcp_client(); }
+
+int main() { main_client(); }
