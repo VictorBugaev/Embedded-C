@@ -33,14 +33,15 @@ int main() {
     perror("bind");
     return -1;
   }
-  while(1){
-    if (recvfrom(fd, message, sizeof(message), 0, (struct sockaddr *)&client, &size) == -1) {
+  while (1) {
+    if (recvfrom(fd, message, sizeof(message), 0, (struct sockaddr *)&client,
+                 &size) == -1) {
       perror("recv");
       return -1;
     }
     printf("%s\n", message);
     printf("Пакет получен\n");
-    
+
     memset(message, 0, strlen(message));
   }
   if ((close(fd)) == -1) {
