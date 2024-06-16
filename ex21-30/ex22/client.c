@@ -31,22 +31,25 @@ int main() {
   char payload[PAYLOAD_SIZE] = "Hello from client!\n";
   memcpy(message + sizeof(udp), payload, strlen(payload));
 
-  struct sockaddr_in addr;
+  struct sockaddr_in serv;
   int size = sizeof(struct sockaddr_in);
 
-  if (sendto(fd, message, sizeof(message), 0, (struct sockaddr *)&addr, size) ==
+  if (sendto(fd, message, sizeof(message), 0, (struct sockaddr *)&serv, size) ==
       -1) {
     perror("sendto");
     return -1;
   }
 
   while (1) {
-    if (recvfrom(fd, message, PAYLOAD_SIZE, 0, (struct sockaddr *)&addr,
+    if (recvfrom(fd, message, sizeof(message), 0, (struct sockaddr *)&serv,
                  &size) == -1) {
       perror("recvto");
       return -1;
     }
+    int n = strlen(message); // определение длины строки
 
+    // Удаление первых 28 символов строки
+    memmove(message, message + 28, n - 28 + 1);
     printf("%s\n", message);
   }
 

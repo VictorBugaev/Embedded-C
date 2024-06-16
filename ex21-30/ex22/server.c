@@ -43,8 +43,7 @@ int main() {
 
   memset(message, 0, sizeof(message));
 
-  strncpy(message, "Hello from server\n", 20);
-
+  strncpy(message, "Hello from server!\n", 20);
   if (sendto(fd, message, sizeof(message), 0, (struct sockaddr *)&client,
              size) == -1) {
     perror("send");
