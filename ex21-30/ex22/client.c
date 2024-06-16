@@ -46,9 +46,7 @@ int main() {
       perror("recvto");
       return -1;
     }
-    int n = strlen(message); // определение длины строки
-
-    // Удаление первых 28 символов строки
+    int n = strlen(message);
     memmove(message, message + 28, n - 28 + 1);
     printf("%s\n", message);
   }
